@@ -10,7 +10,8 @@ struct Square {
     int col {};
 
     bool isValidState() const {
-        return row >= 0 && row < 8 && col >= 0 && col < 8;
+        return row >= 0 && row < 8 && col >= 0 && col < 8; // valid position on table ? 
+        // 8 x 8 grid
     }
 
     bool operator==(const Square& other) const {
