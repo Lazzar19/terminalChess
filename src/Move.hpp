@@ -6,7 +6,7 @@
 
 enum class PossibleMoves {
 
-    NormalMove,
+    NormalMove = 0,
     Castling,
     Promotion,
     EnPassant
