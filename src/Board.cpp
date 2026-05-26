@@ -14,7 +14,7 @@ void Board::clearBoard() {
     occupiedBB = 0ULL;
     whitePiecesBB = 0ULL;
     blackPiecesBB = 0ULL;
-    emptyBB = 0ULL;
+    emptyBB =  ~occupiedBB;
 
     sideToMove = Colors::White;
     castlingRights = 0 ;
@@ -22,7 +22,9 @@ void Board::clearBoard() {
     halfMoveClock = 0;
     fullMoveNumber = 1;
 
-    
+    historyOfMoves.clear();
+
+
 }
 
 
@@ -37,30 +39,54 @@ void  Board::fileAndRankFromSquare(int square, int& rank, int& file) const {
     file =  square % 8;
 }
 
-void Board::setPiece(int square, Colors color, PieceType type) {
 
-    // square is calculated before calling setPiece
-    // it doesnt matter is it calculated from rank and file or from bitmap 
+bool Board::tryToSetPiece(int square, Colors color, PieceType type) {
 
-    int index { pieceIndexFromColorAndType(color, type) };
-    piecesBB[index] = setBit(piecesBB[index], square); // setting piece using index 
-    updateOccupancy(); 
+    const U64 mask { squareMask(square) };
 
-}
+    // if there is already a piece on the square, we cannot set another one there
+    if((occupiedBB & mask) != 0ULL) {
+        return false;
+    }
 
-void Board::removePiece(int square, Colors color, PieceType type) {
-
-    // same here with square 
-
-    int index { pieceIndexFromColorAndType(color, type) };
-    piecesBB[index] = clearBit(piecesBB[index], square);
-
+    const int index { pieceIndexFromColorAndType(color, type) };
+    piecesBB[index] = setBit(piecesBB[index], square);
     updateOccupancy();
+
+    return true;
 }
+
+void Board::forceSetPiece(int square, Colors color, PieceType type) {
+
+    const int existingIndex { pieceIndexAt(square) };
+
+    if(existingIndex != -1) { // if there is something already there, just clear it 
+        piecesBB[existingIndex] = clearBit(piecesBB[existingIndex], square);
+    }
+
+    const int newIndex { pieceIndexFromColorAndType(color, type) };
+    piecesBB[newIndex] = setBit(piecesBB[newIndex], square);
+    updateOccupancy();
+
+}
+
+
+void Board::clearPieceFromSquare(int square) {
+
+    
+    const int index { pieceIndexAt(square) };
+    
+    if(index == -1) // there is no piece on the square 
+        return; 
+
+    piecesBB[index] = clearBit(piecesBB[index], square);
+    updateOccupancy();
+
+} 
 
 void Board::updateOccupancy() {
 
-    // from 12 separate boards we make one single "picture" of table 
+    // from 12 separate boards we make one single "picture" of a table 
     
     whitePiecesBB = 0ULL;
     blackPiecesBB = 0ULL;
@@ -76,4 +102,60 @@ void Board::updateOccupancy() {
     occupiedBB = whitePiecesBB | blackPiecesBB;
     emptyBB = ~occupiedBB;
 
+}
+
+
+int Board::popCount(U64 bitboard) {
+
+    // calculating how many pieces are on the board right now 
+
+    int count { 0 };
+
+    while(bitboard) {
+        bitboard &= (bitboard - 1); // removes the least significant bit 
+        ++count;
+    }
+
+    return count;
+}
+
+int Board::lsbIndex(U64 bitboard) {
+    // least significant bit / index 
+    if(bitboard == 0ULL)
+        return -1;
+
+    int index { 0 };
+
+    while((bitboard & 1ULL) == 0ULL) {
+        bitboard >>= 1;
+        ++index;
+    }
+
+    return index;
+}
+
+int Board::popLSB(U64& bitboard) {
+    // same as lsbIndex function, just removing lsb index 
+
+    if(bitboard == 0ULL)
+        return -1;
+
+    int index { lsbIndex(bitboard) };
+
+    bitboard &= (bitboard - 1);
+    return index;
+
+}
+
+int Board::pieceIndexAt(int square) const  {
+
+    for(int i { 0 }; i < 12; ++i) {
+
+        if((piecesBB[i] & squareMask(square)) != 0ULL) {
+            return i; // just returning the index of occupied piece 
+        }
+
+    }
+
+    return -1; // -1 by default for convention 
 }

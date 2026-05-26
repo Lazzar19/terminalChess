@@ -74,7 +74,7 @@ class Board {
     public:
         
         Board();
-
+        // empty board constructor
         static inline U64 squareMask(int square) {
             return 1ULL << square;
         }
@@ -92,15 +92,21 @@ class Board {
         void fileAndRankFromSquare(int square, int& file, int& rank) const;
         
 
-        void setPiece(int square, Colors color, PieceType type);
-        void removePiece(int square, Colors color, PieceType type);
+      
+
+        bool tryToSetPiece(int square, Colors color, PieceType type);
+        void forceSetPiece(int square, Colors color, PieceType type);
+        
+        
+        void clearPieceFromSquare(int square); 
         
 
         void updateOccupancy();
+        int pieceIndexAt(int square) const;
+        
         static int popCount(U64 bb);
         static int lsbIndex(U64 bb);
         static int popLSB(U64& bb);
-
 
         void clearBoard();
 
