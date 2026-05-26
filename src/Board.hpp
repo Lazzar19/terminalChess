@@ -89,16 +89,12 @@ class Board {
         }
 
         static constexpr int squareFromFileAndRank(int file, int rank);
-        void fileAndRankFromSquare(int square, int& file, int& rank);
+        void fileAndRankFromSquare(int square, int& file, int& rank) const;
+        
 
-
-        void clearBoard();
         void setPiece(int square, Colors color, PieceType type);
         void removePiece(int square, Colors color, PieceType type);
-        int pieceIndexAt(int square) const;
-
-
-
+        
 
         void updateOccupancy();
         static int popCount(U64 bb);
@@ -106,6 +102,7 @@ class Board {
         static int popLSB(U64& bb);
 
 
+        void clearBoard();
 
 
 };
